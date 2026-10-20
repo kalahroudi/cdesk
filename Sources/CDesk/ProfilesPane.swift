@@ -16,6 +16,13 @@ struct ProfilesPane: View {
         VStack(spacing: 0) {
             PaneHeader(title: "Profile: \(model.selected)", subtitle: "Every colima start option, grouped. Settings with a lock need the VM to be recreated.") {
                 HStack(spacing: 8) {
+                    if model.profile != nil {
+                        Menu("Repair") {
+                            Button("Force stop & restart (VM stuck)") { model.repairForceRestart() }
+                            Button("Re-register Docker context") { model.repairDockerContext() }
+                            Button("Use fixed DNS & restart (no internet in containers)") { model.repairDNS() }
+                        }.menuStyle(.borderlessButton).fixedSize().disabled(model.busy)
+                    }
                     if model.profile != nil { Button("Delete…") { model.sheet = .removeProfile(model.selected) }.buttonStyle(Pill(kind: .danger)) }
                     Button("New profile") { model.sheet = .newProfile }.buttonStyle(Pill())
                 }

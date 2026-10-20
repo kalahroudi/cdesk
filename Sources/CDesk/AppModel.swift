@@ -286,6 +286,34 @@ final class AppModel {
         }
     }
 
+    // MARK: Repair (the guide's troubleshooting, one click each)
+
+    /// VM stuck on startup: force stop, then start again with the saved settings.
+    func repairForceRestart() {
+        let name = selected, cm = colima
+        runTask("Force restarting \(name)") { log in
+            _ = try? await cm.stop(profile: name, force: true, onLine: log)
+            try await cm.startExisting(profile: name, onLine: log)
+        }
+    }
+
+    /// Docker context disappeared after a Colima update: select it again, or start so Colima registers it.
+    func repairDockerContext() {
+        let p = profile, name = selected, cm = colima
+        runTask("Re-registering Docker context") { log in
+            let ctx = p?.dockerContext ?? (name == "default" ? "colima" : "colima-\(name)")
+            let r = try await Shell.run("docker", ["context", "use", ctx], timeout: 10)
+            if !r.ok { log("Context missing; starting Colima to register it"); try await cm.startExisting(profile: name, onLine: log) }
+            else { log("Using docker context \(ctx)") }
+        }
+    }
+
+    /// Containers can't reach the internet: almost always DNS. Pin resolvers and restart.
+    func repairDNS() {
+        draft.dns = ["1.1.1.1", "8.8.8.8"]
+        applyAndRestart()
+    }
+
     // MARK: Docker actions
 
     func perform(_ action: ContainerAction, ids: [String]) {
