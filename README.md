@@ -20,6 +20,22 @@
   <img src="assets/screenshot.jpg" width="520" alt="The CDesk menu bar popover showing Colima running, CPU, memory and disk, quick actions and reclaimable space">
 </p>
 
+## Install with an AI agent
+
+Paste this into an AI coding agent such as Claude Code. CDesk detects and installs its own prerequisites (Homebrew, Colima, Docker CLI) on first launch, so the agent does not have to:
+
+```text
+Install CDesk on this Mac.
+1. Run: curl -fsSL https://raw.githubusercontent.com/kalahroudi/cdesk/main/scripts/install.sh | bash
+2. CDesk opens and its first-run setup checks for Homebrew, Colima and the Docker CLI, and installs
+   whatever is missing. Tell me to click Install in that window if it is waiting, and wait until it
+   reports everything is ready and a first profile exists.
+3. Register its MCP server: claude mcp add cdesk -- /Applications/CDesk.app/Contents/MacOS/cdesk-mcp
+4. Call colima_profiles. If Colima is not running, call colima_start for the profile.
+5. Tell me what is running.
+Never call colima_recreate, docker_remove_volume or docker_prune without asking me first.
+```
+
 ## Why
 
 Docker Desktop is heavy. Colima is a great, light alternative, but it is command line only, and its best settings are easy to get wrong: some are fixed when the VM is created, DNS breaks when you switch Wi-Fi, and many people stay on slow `sshfs` mounts for years.
@@ -57,22 +73,7 @@ git clone https://github.com/kalahroudi/cdesk && cd cdesk
 scripts/bundle.sh && cp -R dist/CDesk.app /Applications
 ```
 
-Full instructions and troubleshooting: [kalahroudi.github.io/cdesk/install.html](https://kalahroudi.github.io/cdesk/install.html).
-
-### Agent prompt
-
-Paste this into an AI coding agent such as Claude Code to install and set up everything:
-
-```text
-Install CDesk on this Mac.
-1. Check that Homebrew is installed. If colima or docker are missing, run: brew install colima docker
-2. Run: curl -fsSL https://raw.githubusercontent.com/kalahroudi/cdesk/main/scripts/install.sh | bash
-3. Register its MCP server: claude mcp add cdesk -- /Applications/CDesk.app/Contents/MacOS/cdesk-mcp
-4. Call colima_profiles. If there are none, call colima_recommend and start a profile with the recommended
-   cpus, memory_gib and disk_gib using colima_start.
-5. Tell me what is running.
-Never call colima_recreate, docker_remove_volume or docker_prune without asking me first.
-```
+Prefer to let an AI agent do it? See [Install with an AI agent](#install-with-an-ai-agent). Full instructions and troubleshooting: [kalahroudi.github.io/cdesk/install.html](https://kalahroudi.github.io/cdesk/install.html).
 
 ## Use
 
