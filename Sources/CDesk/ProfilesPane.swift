@@ -78,7 +78,7 @@ struct ProfilesPane: View {
                             FormRow("VM type", flag: "--vm-type", help: ("VM type", "vz uses Apple's Virtualization framework: faster to start, lower energy, and it enables virtiofs and Rosetta. qemu is a slower software emulator. krunkit is experimental."), lock: locked ? "recreate" : nil, changed: m.draft.vmType != m.saved.vmType) {
                                 Segmented(options: VMType.allCases.map { ($0, $0 == .vz ? "VZ" : $0.rawValue.uppercased()) }, selection: $m.draft.vmType)
                             }
-                            FormRow("Mount type", flag: "--mount-type", help: ("Mount type", "How your Mac's folders appear inside containers. virtiofs is the fastest and works with vz. sshfs and 9p are slower, noticeable with npm install and builds."), lock: locked ? "recreate" : nil, changed: m.draft.mountType != m.saved.mountType, note: m.draft.mountType != m.saved.mountType ? "\(m.saved.mountType.rawValue) → \(m.draft.mountType.rawValue)" : nil) {
+                            FormRow("Mount type", flag: "--mount-type", help: ("Mount type", "How your Mac's folders appear inside containers. virtiofs is usually the fastest and works with vz. sshfs and 9p are slower, noticeable with npm install and builds."), lock: locked ? "recreate" : nil, changed: m.draft.mountType != m.saved.mountType, note: m.draft.mountType != m.saved.mountType ? "\(m.saved.mountType.rawValue) → \(m.draft.mountType.rawValue)" : nil) {
                                 Segmented(options: MountType.allCases.map { ($0, $0.rawValue) }, selection: $m.draft.mountType)
                             }
                             FormRow("Rosetta for amd64 images", flag: "--vz-rosetta", help: ("Rosetta", "Lets the VM run linux/amd64 images using Apple's translation layer, much faster than emulating. Leave it off if all your images are arm64."), changed: m.draft.rosetta != m.saved.rosetta, note: model.hasAmd64 ? nil : "off · no amd64 images found") {
@@ -126,7 +126,7 @@ struct ProfilesPane: View {
         let matches = model.draft.cpus == r.cpus && model.draft.memoryGiB == r.memoryGiB
         return HStack(spacing: 12) {
             Image(systemName: "wand.and.stars").foregroundStyle(Theme.accent)
-            Text("**Recommended for this Mac** (\(hw.totalCores) cores · \(Int(hw.memoryGiB)) GB): \(r.cpus) CPU · \(Int(r.memoryGiB)) GB RAM · \(r.diskGiB) GB disk. About half your cores and 50% of RAM, so macOS keeps the rest.").font(.system(size: 12.5))
+            Text("**Recommended for this Mac** (\(hw.totalCores) cores · \(Int(hw.memoryGiB)) GB): \(r.cpus) CPU · \(Int(r.memoryGiB)) GB RAM · \(r.diskGiB) GB disk. A starting point: about half your cores and RAM, so macOS keeps the rest. Adjust to your workload.").font(.system(size: 12.5))
             Spacer(minLength: 0)
             Button(matches ? "Applied" : "Use these") { model.draft.cpus = r.cpus; model.draft.memoryGiB = r.memoryGiB; if !locked { model.draft.diskGiB = r.diskGiB } }.buttonStyle(Pill(kind: .primary)).disabled(matches)
         }.padding(11).background(Theme.accentSoft, in: RoundedRectangle(cornerRadius: 10))

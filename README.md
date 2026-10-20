@@ -30,7 +30,7 @@ CDesk gives Colima a small, friendly UI and is tuned for performance and stabili
 
 - **Menu bar popover** (with the arrow, like a real macOS popover) and a **Dock icon** that opens the **Manager** window.
 - **Colima profiles**: every `colima start` option, grouped. Settings that need a VM rebuild are marked with a lock, and changing them goes through a clear *Recreate VM* sheet with a backup option and type-the-name confirmation.
-- **Recommendations for your Mac**: about half your cores and 50% of RAM, with a live view of what the VM takes from macOS.
+- **A starting size for your Mac**: about half your cores and RAM, with a live view of what the VM takes from macOS. It is a starting point; adjust it to your workload.
 - **Containers and Compose stacks**: search, paging, select-all and bulk actions, logs, and one-click shells in Terminal or iTerm2.
 - **Images and volumes**: pull, remove, spot unused and dangling ones, and reclaim space with prune.
 - **Light and dark**, launch at login (on by default, off with one switch), background tasks with notifications, and self-update from releases or the main branch.

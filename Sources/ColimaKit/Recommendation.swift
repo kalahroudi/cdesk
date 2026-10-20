@@ -34,7 +34,7 @@ public struct Recommendation: Equatable, Sendable {
     public var memoryGiB: Double
     public var diskGiB: Int
 
-    /// Rule of thumb: give Colima about half your cores and 50% of RAM,
+    /// A starting point, not a rule: give Colima about half your cores and RAM,
     /// and leave the rest to macOS. 100 GiB of disk leaves room for the image cache (disk can only grow later).
     public static func forHardware(_ hw: Hardware) -> Recommendation {
         let cpus = max(2, hw.totalCores / 2)
@@ -65,7 +65,7 @@ public enum Optimizer {
             }
         }
         if c.mountType == .virtiofs {
-            out.append(Advice(id: "mount", severity: .good, title: "virtiofs mounts", detail: "The fastest file sharing option, noticeable with npm install and builds.", effect: .none))
+            out.append(Advice(id: "mount", severity: .good, title: "virtiofs mounts", detail: "Usually the fastest file sharing option, noticeable with npm install and builds.", effect: .none))
         } else if c.vmType == .vz {
             out.append(Advice(id: "mount", severity: .suggestion, title: "Switch mounts to virtiofs", detail: "\(c.mountType.rawValue) is slower for file-heavy work. virtiofs works with vz. It needs a delete and recreate.", effect: .recreate))
         }
