@@ -24,7 +24,7 @@
 
 Docker Desktop is heavy. Colima is a great, light alternative, but it is command line only, and its best settings are easy to get wrong: some are fixed when the VM is created, DNS breaks when you switch Wi-Fi, and many people stay on slow `sshfs` mounts for years.
 
-CDesk gives Colima a small, friendly UI and applies the optimisation guidance from the community guide [2 Years with Colima](https://iniakunhuda.medium.com/2-years-with-colima-the-optimization-guide-i-wish-i-had-from-day-one-8b89b8155285): `vz` and `virtiofs`, right-sized CPU and memory, fixed DNS, file-change events, and named profiles. Every option has a "?" that says what it is and why.
+CDesk gives Colima a small, friendly UI and is tuned for performance and stability: `vz` and `virtiofs`, right-sized CPU and memory, fixed DNS, file-change events, and named profiles. Every option has a "?" that says what it is and why.
 
 ## What you get
 
@@ -131,6 +131,6 @@ scripts/make-dmg.sh 0.1.0
 
 ## Credits and license
 
-[Colima](https://github.com/abiosoft/colima) is by Abiosoft and its contributors; CDesk is not affiliated with it. The optimisation approach follows Miftahul Huda's [guide](https://iniakunhuda.medium.com/2-years-with-colima-the-optimization-guide-i-wish-i-had-from-day-one-8b89b8155285).
+[Colima](https://github.com/abiosoft/colima) is by Abiosoft and its contributors; CDesk is not affiliated with it.
 
 Licensed under the [Apache License 2.0](LICENSE).

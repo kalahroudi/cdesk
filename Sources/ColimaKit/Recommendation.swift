@@ -34,7 +34,7 @@ public struct Recommendation: Equatable, Sendable {
     public var memoryGiB: Double
     public var diskGiB: Int
 
-    /// Rule of thumb from the Colima optimisation guide: give Colima about half your cores and 50% of RAM,
+    /// Rule of thumb: give Colima about half your cores and 50% of RAM,
     /// and leave the rest to macOS. 100 GiB of disk leaves room for the image cache (disk can only grow later).
     public static func forHardware(_ hw: Hardware) -> Recommendation {
         let cpus = max(2, hw.totalCores / 2)

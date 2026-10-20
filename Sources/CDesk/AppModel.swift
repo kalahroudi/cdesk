@@ -286,7 +286,7 @@ final class AppModel {
         }
     }
 
-    // MARK: Repair (the guide's troubleshooting, one click each)
+    // MARK: Repair (common fixes, one click each)
 
     /// VM stuck on startup: force stop, then start again with the saved settings.
     func repairForceRestart() {
