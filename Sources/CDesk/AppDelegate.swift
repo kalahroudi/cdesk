@@ -43,11 +43,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSPo
         Task { Updater.shared.autoCheckIfDue(enabled: Prefs.shared.autoCheckUpdates) }
     }
 
+    /// The popover does not follow NSApp.appearance on its own (it takes the menu bar's look), so set it explicitly.
+    func applyAppearance() {
+        let dark = NSApp.effectiveAppearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+        popover.appearance = NSAppearance(named: dark ? .darkAqua : .aqua)
+    }
+
     @objc func openSettings() { showManager(section: .settings) }
 
     @objc private func togglePopover() {
         if popover.isShown { popover.performClose(nil); return }
         guard let button = statusItem.button else { return }
+        applyAppearance()
         let host = NSHostingController(rootView: PopoverView(openManager: { [weak self] s in self?.showManager(section: s) }))
         host.sizingOptions = .preferredContentSize
         popover.contentViewController = host

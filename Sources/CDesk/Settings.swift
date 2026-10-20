@@ -92,6 +92,7 @@ final class Prefs {
 
     func applyTheme() {
         NSApp?.appearance = switch theme { case .system: nil; case .light: NSAppearance(named: .aqua); case .dark: NSAppearance(named: .darkAqua) }
+        (NSApp?.delegate as? AppDelegate)?.applyAppearance()
     }
 
     func applyDockIcon() {
