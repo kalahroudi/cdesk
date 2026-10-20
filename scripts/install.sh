@@ -54,6 +54,6 @@ rm -rf "$DEST/CDesk.app"
 ditto "$SRC" "$DEST/CDesk.app"
 say "Installed $DEST/CDesk.app"
 
-command -v colima >/dev/null || say "Colima is not installed yet. Run: brew install colima docker"
+command -v colima >/dev/null || say "Colima is not installed yet. CDesk will offer to install it (with Docker) on first launch."
 open "$DEST/CDesk.app"
 say "Done. Look for the cube icon in your menu bar."

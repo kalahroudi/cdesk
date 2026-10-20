@@ -15,7 +15,7 @@ struct PopoverView: View {
     var body: some View {
         VStack(spacing: 12) {
             header
-            if let problem = model.missingTool { MissingToolView(tool: problem) }
+            if model.loadedOnce, model.needsSetup { SetupView(compact: true) }
             else if !model.loadedOnce { SkeletonList(rows: 5).frame(height: 220) }
             else {
                 Segmented(options: [(Tab.overview, "Overview"), (Tab.containers, "Containers · \(model.containers.count)"), (Tab.stacks, "Stacks · \(model.stacks.count)")], selection: $tab)
@@ -277,17 +277,5 @@ struct ToastView: View {
                 .padding(.bottom, 44).padding(.horizontal, 14)
                 .transition(.move(edge: .bottom).combined(with: .opacity))
         }
-    }
-}
-
-struct MissingToolView: View {
-    let tool: String
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("\(tool) is not installed").font(.system(size: 14, weight: .semibold))
-            Text("cdesk drives the \(tool) command line tool. Install it with Homebrew, then reopen this window:").font(.system(size: 12.5)).foregroundStyle(.secondary)
-            HStack { Text("brew install \(tool)").font(.system(size: 12, design: .monospaced)); CopyButton(text: "brew install \(tool)", label: "Copy command") }
-                .padding(8).background(Theme.terminal, in: RoundedRectangle(cornerRadius: 8)).foregroundStyle(.white)
-        }.frame(maxWidth: .infinity, alignment: .leading).card()
     }
 }

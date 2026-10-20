@@ -102,7 +102,7 @@ final class Updater {
         guard build.cleanCommit != nil || build.version != "0.0.0" else { status = .notComparable("This is a development build."); return }
         phase = .checking
         do {
-            status = try await UpdateChecker().check(build)
+            status = try await UpdateChecker().check(build, allowBranch: Prefs.shared.updateChannel == .main)
             lastChecked = Date()
             phase = .idle
             if !silent, case .upToDate? = status { AppModel.shared.show("cdesk is up to date") }

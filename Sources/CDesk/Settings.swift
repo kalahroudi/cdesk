@@ -9,6 +9,9 @@ enum ThemeChoice: String, CaseIterable { case system, light, dark
     var label: String { rawValue.capitalized }
 }
 enum TerminalApp: String, CaseIterable { case terminal = "Terminal", iterm = "iTerm2" }
+enum UpdateChannel: String, CaseIterable { case releases, main
+    var label: String { self == .releases ? "Releases" : "Main branch" }
+}
 enum ShellChoice: String, CaseIterable { case bash, sh, zsh }
 
 /// User preferences, stored in UserDefaults.
@@ -26,6 +29,7 @@ final class Prefs {
     var notify: Bool { didSet { d.set(notify, forKey: "notify") } }
     var refreshSeconds: Int { didSet { d.set(refreshSeconds, forKey: "refreshSeconds") } }
     var showDockIcon: Bool { didSet { d.set(showDockIcon, forKey: "showDockIcon"); applyDockIcon() } }
+    var updateChannel: UpdateChannel { didSet { d.set(updateChannel.rawValue, forKey: "updateChannel") } }
     var autoCheckUpdates: Bool { didSet { d.set(autoCheckUpdates, forKey: "autoCheckUpdates") } }
     var sidebarCollapsed: Bool { didSet { d.set(sidebarCollapsed, forKey: "sidebarCollapsed") } }
 
@@ -46,6 +50,7 @@ final class Prefs {
         showDockIcon = d.bool(forKey: "showDockIcon")
         sidebarCollapsed = d.bool(forKey: "sidebarCollapsed")
         autoCheckUpdates = d.bool(forKey: "autoCheckUpdates")
+        updateChannel = UpdateChannel(rawValue: d.string(forKey: "updateChannel") ?? "") ?? .releases
         // First run: opt in to launch at login. After that the user's choice always wins.
         if !d.bool(forKey: "launchAtLoginDefaulted") {
             d.set(true, forKey: "launchAtLoginDefaulted")

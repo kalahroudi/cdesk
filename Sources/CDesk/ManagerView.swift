@@ -32,10 +32,10 @@ struct ManagerView: View {
     }
 
     @ViewBuilder private var detail: some View {
-        if let tool = model.missingTool {
-            MissingToolView(tool: tool).padding(24).frame(maxWidth: 520).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top).padding(.top, 40)
-        } else if !model.loadedOnce {
+        if !model.loadedOnce {
             SkeletonList(rows: 9).frame(maxHeight: .infinity, alignment: .top).padding(.top, 40)   // never show a half-loaded page
+        } else if model.needsSetup && nav.section != .settings && nav.section != .help {
+            SetupView().padding(24).frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top).padding(.top, 40)
         } else {
             switch nav.section {
             case .overview: OverviewPane()
@@ -83,8 +83,8 @@ struct Sidebar: View {
             HStack(spacing: 9) {
                 Image(systemName: s.symbol).font(.system(size: 14)).frame(width: 20)
                 if !collapsed {
-                    Text(s.title).font(.system(size: 13, weight: on ? .semibold : .regular))
-                    Spacer()
+                    Text(s.title).font(.system(size: 13, weight: on ? .semibold : .regular)).lineLimit(1).fixedSize(horizontal: true, vertical: false)
+                    Spacer(minLength: 4)
                     badge(s)
                 }
             }
@@ -102,13 +102,18 @@ struct Sidebar: View {
         case .containers: Text("\(model.containers.count)").font(.system(size: 11)).foregroundStyle(.secondary)
         case .cleanup:
             if let inv = model.inventory, inv.reclaimableBytes > 500_000_000 {
-                Text(formatBytes(inv.reclaimableBytes)).font(.system(size: 10.5, weight: .semibold)).lineLimit(1).fixedSize().foregroundStyle(.white).padding(.horizontal, 6).background(Theme.danger.opacity(0.9), in: Capsule())
+                Text(shortSize(inv.reclaimableBytes)).font(.system(size: 10.5, weight: .semibold)).lineLimit(1).fixedSize().foregroundStyle(.white).padding(.horizontal, 6).background(Theme.danger.opacity(0.9), in: Capsule())
             }
         case .settings:
             if Updater.shared.available != nil { Circle().fill(Theme.accent).frame(width: 7, height: 7) }
         default: EmptyView()
         }
     }
+}
+
+/// Compact size for badges: "13 GB", "800 MB".
+func shortSize(_ bytes: Int64) -> String {
+    bytes >= 1_000_000_000 ? "\(Int((Double(bytes) / 1e9).rounded())) GB" : "\(max(1, Int((Double(bytes) / 1e6).rounded()))) MB"
 }
 
 /// Resident memory of this app, shown in the sidebar so the "light" claim is visible.

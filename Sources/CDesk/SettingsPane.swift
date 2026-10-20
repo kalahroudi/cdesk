@@ -135,6 +135,7 @@ struct UpdatesView: View {
         VStack(alignment: .leading, spacing: 16) {
             SettingsGroup("This build") {
                 SettingRow("Version", "From \(u.build.repo) · branch \(u.build.branch)") { Text("\(u.build.version) · \(u.build.shortCommit)\(u.build.isDirty ? " (modified)" : "")").font(.system(size: 12.5, design: .monospaced)) }
+                SettingRow("Update channel", "Releases: signed disk images, the safe default. Main branch: also offers a build of the newest commit (needs Xcode command line tools).") { Segmented(options: UpdateChannel.allCases.map { ($0, $0.label) }, selection: $p.updateChannel) }
                 SettingRow("Check automatically", "Once a day at most, when the app starts. Nothing runs in between.") { Toggle("", isOn: $p.autoCheckUpdates).labelsHidden().toggleStyle(.switch).tint(Theme.accent) }
             }
             VStack(alignment: .leading, spacing: 10) {

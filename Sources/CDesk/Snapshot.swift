@@ -30,12 +30,21 @@ enum SnapshotMode {
                 return AnyView(ManagerView(stacksTab: stacks))
             }
         }
+        func setup() -> Shot {
+            Shot(name: "manager-setup", dark: false, size: CGSize(width: 1100, height: 740)) {
+                let m = AppModel.shared
+                m.profiles = []; m.containers = []; m.stats = [:]; m.inventory = nil; m.sheet = nil
+                m.setupState = SetupState(homebrew: true, colima: false, docker: false); m.missingTool = "colima"
+                Nav.shared.section = .overview
+                return AnyView(ManagerView())
+            }
+        }
         func pop(_ tab: PopoverView.Tab, dark: Bool = false) -> Shot {
             Shot(name: "popover-\(tab == .overview ? "overview" : "stacks")\(dark ? "-dark" : "")", dark: dark, size: CGSize(width: 800, height: 700)) { AnyView(PopoverShot(tab: tab)) }
         }
         return [pop(.overview), pop(.stacks), pop(.overview, dark: true),
                 manager(.overview), manager(.profiles), manager(.profiles, sheet: .recreate), manager(.containers), manager(.containers, stacks: true),
-                manager(.images), manager(.cleanup), manager(.settings), manager(.help), manager(.overview, dark: true), manager(.profiles, dark: true)]
+                manager(.images), manager(.cleanup), manager(.settings), manager(.help), manager(.overview, dark: true), manager(.profiles, dark: true), setup()]
     }
 
     @MainActor static func render(_ shot: Shot, to dir: String) async {

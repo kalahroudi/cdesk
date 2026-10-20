@@ -118,11 +118,13 @@ public struct UpdateChecker: Sendable {
 
     public init(session: URLSession = .shared) { self.session = session }
 
-    public func check(_ build: BuildInfo) async throws -> UpdateStatus {
+    /// - allowBranch: when no newer release exists, also offer a build of the newest commit on the branch.
+    public func check(_ build: BuildInfo, allowBranch: Bool = true) async throws -> UpdateStatus {
         // A newer prebuilt release wins: it installs without Xcode tools.
         if let release = try await latestRelease(repo: build.repo), Version.isNewer(release.version, than: build.version) {
             return .available(UpdateInfo(sha: release.tag, aheadBy: 0, summaries: release.notes, release: release))
         }
+        guard allowBranch else { return .upToDate }
         guard let current = build.cleanCommit else { return .notComparable("This build has no commit recorded.") }
         let head = try await headSHA(repo: build.repo, branch: build.branch)
         if head == current { return .upToDate }

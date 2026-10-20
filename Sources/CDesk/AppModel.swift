@@ -59,6 +59,7 @@ final class AppModel {
     var toast: Toast?
     var sheet: SideSheet?
     var missingTool: String?
+    var setupState = SetupState.detect()
     var updatedAt: Date?
 
     var onStatusChange: ((Bool?) -> Void)?
@@ -81,6 +82,8 @@ final class AppModel {
     }
     var usedMemoryGiB: Double? { stats.isEmpty ? nil : Double(stats.values.reduce(0) { $0 + $1.memoryBytes }) / 1_073_741_824 }
     var totalCPUPercent: Double { stats.values.reduce(0) { $0 + $1.cpuPercent } }
+    /// True until Colima, Docker and a first profile exist: the app then shows the guided setup instead of empty screens.
+    var needsSetup: Bool { missingTool != nil || (loadedOnce && profiles.isEmpty) }
     var busy: Bool { tasks.contains { $0.state == .running } }
     var runningTask: BackgroundTask? { tasks.last { $0.state == .running } }
 
@@ -118,8 +121,9 @@ final class AppModel {
 
     func refresh(forceInventory: Bool = false) async {
         if demo { loadedOnce = true; return }
-        guard Colima.isInstalled else { missingTool = "colima"; loadedOnce = true; return }
-        guard Colima.dockerInstalled else { missingTool = "docker"; loadedOnce = true; return }
+        setupState = SetupState.detect()
+        guard setupState.colima else { missingTool = "colima"; loadedOnce = true; return }
+        guard setupState.docker else { missingTool = "docker"; loadedOnce = true; return }
         missingTool = nil
         if colimaVersion == nil { colimaVersion = await colima.version() }
         do {
@@ -213,6 +217,26 @@ final class AppModel {
             guard granted else { return }
             let c = UNMutableNotificationContent(); c.title = title; c.body = body
             center.add(UNNotificationRequest(identifier: UUID().uuidString, content: c, trigger: nil))
+        }
+    }
+
+    // MARK: First-run setup
+
+    /// Installs what is missing with Homebrew, then creates and starts a first profile sized for this Mac.
+    func setUpEverything() {
+        let state = SetupState.detect(), cm = colima, hw = hardware, hasProfile = !profiles.isEmpty, name = selected
+        let useContext = settings.switchDockerContext
+        runTask("Setting up Colima") { log in
+            if !state.toolsReady {
+                guard state.homebrew else { throw ShellError.failed(command: "setup", status: 1, stderr: "Homebrew is needed first. Install it, then try again.") }
+                log("Installing \(state.missingPackages.joined(separator: ", ")) with Homebrew…")
+                try await SetupState.installMissing(state.missingPackages, onLine: log)
+            }
+            if !hasProfile {
+                log("Creating the \(name) profile with settings for this Mac…")
+                try await cm.start(profile: name, config: .recommended(for: hw), onLine: log)
+                if useContext { _ = try? await Shell.run("docker", ["context", "use", name == "default" ? "colima" : "colima-\(name)"], timeout: 10) }
+            }
         }
     }
 

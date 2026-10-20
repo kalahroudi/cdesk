@@ -180,4 +180,24 @@ final class ColimaKitTests: XCTestCase {
         XCTAssertTrue(b.isDirty); XCTAssertEqual(b.cleanCommit, "0123456789abcdef"); XCTAssertEqual(b.shortCommit, "0123456")
         XCTAssertNil(BuildInfo(commit: "unknown").cleanCommit)
     }
+
+    // MARK: setup
+
+    func testSetupMissingPackages() {
+        XCTAssertEqual(SetupState(homebrew: true, colima: false, docker: false).missingPackages, ["colima", "docker"])
+        XCTAssertEqual(SetupState(homebrew: true, colima: true, docker: false).missingPackages, ["docker"])
+        XCTAssertTrue(SetupState(homebrew: false, colima: true, docker: true).toolsReady)
+        XCTAssertTrue(SetupState(homebrew: true, colima: false, docker: true).canAutoInstall)
+        XCTAssertFalse(SetupState(homebrew: false, colima: false, docker: true).canAutoInstall)
+        XCTAssertEqual(SetupState(homebrew: true, colima: false, docker: false).manualCommand, "brew install colima docker")
+    }
+
+    func testRecommendedConfig() {
+        let m1 = Hardware(memoryGiB: 16, totalCores: 8, performanceCores: 4, isAppleSilicon: true)
+        let c = ColimaConfig.recommended(for: m1)
+        XCTAssertEqual(c.cpus, 4); XCTAssertEqual(c.memoryGiB, 8); XCTAssertEqual(c.arch, "aarch64")
+        XCTAssertEqual(c.vmType, .vz); XCTAssertEqual(c.mountType, .virtiofs); XCTAssertTrue(c.mountInotify)
+        let intel = Hardware(memoryGiB: 16, totalCores: 8, performanceCores: 8, isAppleSilicon: false)
+        XCTAssertEqual(ColimaConfig.recommended(for: intel).arch, "x86_64")
+    }
 }

@@ -42,13 +42,9 @@ About **40 MB** of memory when idle, a **6.7 MB** app, no third-party dependenci
 
 ## Install
 
-Requires macOS 14 or newer (Apple silicon recommended), [Homebrew](https://brew.sh), and Colima with the Docker CLI:
+Requires macOS 14 or newer (Apple silicon recommended). You do not need to install Colima or Docker first: on first launch CDesk checks for [Homebrew](https://brew.sh), Colima and the Docker CLI, installs whatever is missing with one button, and creates a first profile sized for your Mac.
 
-```sh
-brew install colima docker
-```
-
-Then install CDesk:
+Install CDesk:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/kalahroudi/cdesk/main/scripts/install.sh | bash
@@ -102,7 +98,7 @@ Tools: `colima_profiles`, `colima_config`, `colima_recommend`, `colima_start`, `
 
 ## Updates
 
-**Settings → Updates** checks GitHub once a day (you can turn it off). If a newer release exists it downloads the disk image, verifies the SHA-256 and code signature, swaps the app in after it quits, and rolls back automatically if the new version does not start. With no newer release it can build the latest commit of `main` for you (needs the Xcode command line tools).
+**Settings → Updates** checks GitHub once a day (you can turn it off). By default only releases are offered; switch the channel to *Main branch* to also get the newest commit. If a newer release exists it downloads the disk image, verifies the SHA-256 and code signature, swaps the app in after it quits, and rolls back automatically if the new version does not start. With no newer release it can build the latest commit of `main` for you (needs the Xcode command line tools).
 
 ## Project layout
 
