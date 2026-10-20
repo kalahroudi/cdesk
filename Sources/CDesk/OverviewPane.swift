@@ -50,14 +50,38 @@ struct OverviewPane: View {
                 box("COLIMA VM · Linux · Lima", tint: Theme.accent, border: Theme.accent) {
                     HStack { Badge(text: model.saved.vmType.rawValue.uppercased(), kind: .accent); if let p = model.profile { Badge(text: "\(p.cpus) CPU", kind: .accent); Badge(text: "\(Int(p.memoryGiB)) GB", kind: .accent) } }
                     node("Docker daemon", model.profile?.isRunning == true ? "running" : "stopped", help: ("Docker daemon", "dockerd runs here, inside the VM, and starts your containers."))
-                    FlowLayout(spacing: 6) {
-                        ForEach(model.containers.prefix(5)) { c in Text(c.name).font(.system(size: 11.5)).padding(.horizontal, 9).padding(.vertical, 5).background(Theme.card, in: RoundedRectangle(cornerRadius: 7)).overlay(RoundedRectangle(cornerRadius: 7).stroke(Theme.accent.opacity(0.4))) }
-                        if model.containers.count > 5 { Text("+ \(model.containers.count - 5) more").font(.system(size: 11.5)).foregroundStyle(.secondary).padding(.horizontal, 9).padding(.vertical, 5) }
-                        if model.containers.isEmpty { Text("No containers yet").font(.system(size: 11.5)).foregroundStyle(.secondary) }
-                    }
+                    containerSummary
                 }.frame(maxWidth: .infinity)
             }
         }.card(padding: 14)
+    }
+
+    /// Never one bubble per container: counts first, then only the heaviest running ones, then a link to the full list.
+    @ViewBuilder private var containerSummary: some View {
+        let running = model.containers.filter(\.isRunning)
+        let stopped = model.containers.count - running.count
+        let top = running.sorted { (model.stats[$0.id]?.memoryBytes ?? 0) > (model.stats[$1.id]?.memoryBytes ?? 0) }.prefix(6)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 10) {
+                Text("**\(running.count)** running").font(.system(size: 12.5))
+                Text("**\(stopped)** stopped").font(.system(size: 12.5)).foregroundStyle(.secondary)
+                Text("**\(model.stacks.count)** stacks").font(.system(size: 12.5)).foregroundStyle(.secondary)
+            }
+            if model.containers.isEmpty { Text("No containers yet").font(.system(size: 11.5)).foregroundStyle(.secondary) }
+            FlowLayout(spacing: 6) {
+                ForEach(Array(top)) { c in
+                    HStack(spacing: 5) {
+                        StatusDot(color: Theme.ok)
+                        Text(c.name).font(.system(size: 11.5)).lineLimit(1).frame(maxWidth: 170, alignment: .leading).fixedSize()
+                    }.padding(.horizontal, 9).padding(.vertical, 5).background(Theme.card, in: RoundedRectangle(cornerRadius: 7)).overlay(RoundedRectangle(cornerRadius: 7).stroke(Theme.accent.opacity(0.4)))
+                }
+                if running.count > top.count {
+                    Button("+ \(running.count - top.count) more running") { Nav.shared.section = .containers }
+                        .buttonStyle(.plain).font(.system(size: 11.5, weight: .medium)).foregroundStyle(Theme.accent).padding(.horizontal, 6).padding(.vertical, 5)
+                }
+            }
+            if !top.isEmpty { Text("Showing the heaviest by memory").font(.system(size: 10.5)).foregroundStyle(.secondary) }
+        }
     }
 
     private func box<C: View>(_ title: String, tint: Color, border: Color, @ViewBuilder content: () -> C) -> some View {

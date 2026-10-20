@@ -82,6 +82,8 @@ A short tour with screenshots is in the [usage guide](https://kalahroudi.github.
 
 ## MCP server for agents
 
+The quickest way: **Settings → Agents (MCP)** detects Claude Code, Claude Desktop, Cursor, Windsurf, Gemini CLI and Codex CLI and gives each a **Connect** button that turns into **Connected** (and **Disconnect**). Your other agent settings are left alone.
+
 The app bundle includes `cdesk-mcp`, a stdio [Model Context Protocol](https://modelcontextprotocol.io) server. It uses the same `colima` and `docker` commands as the app and works whether or not the app is open.
 
 ```sh

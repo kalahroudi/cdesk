@@ -200,4 +200,51 @@ final class ColimaKitTests: XCTestCase {
         let intel = Hardware(memoryGiB: 16, totalCores: 8, performanceCores: 8, isAppleSilicon: false)
         XCTAssertEqual(ColimaConfig.recommended(for: intel).arch, "x86_64")
     }
+
+    // MARK: agents
+
+    func testJSONInstallKeepsOtherSettings() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("cdesk-agents-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let url = dir.appendingPathComponent("config.json")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        try #"{"theme":"dark","mcpServers":{"other":{"command":"/bin/other"}}}"#.write(to: url, atomically: true, encoding: .utf8)
+
+        try AgentIntegrations.jsonInstall(at: url, command: "/Applications/CDesk.app/Contents/MacOS/cdesk-mcp")
+        XCTAssertEqual(AgentIntegrations.jsonCommand(at: url), "/Applications/CDesk.app/Contents/MacOS/cdesk-mcp")
+        let root = try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any]
+        XCTAssertEqual(root?["theme"] as? String, "dark")
+        XCTAssertNotNil((root?["mcpServers"] as? [String: Any])?["other"])
+        XCTAssertTrue(FileManager.default.fileExists(atPath: url.appendingPathExtension("cdesk-backup").path))
+
+        try AgentIntegrations.jsonRemove(at: url)
+        XCTAssertNil(AgentIntegrations.jsonCommand(at: url))
+        let after = try JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any]
+        XCTAssertNotNil((after?["mcpServers"] as? [String: Any])?["other"])
+    }
+
+    func testJSONInstallCreatesMissingFileAndRefusesNonObject() throws {
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("cdesk-agents-\(UUID().uuidString)")
+        defer { try? FileManager.default.removeItem(at: dir) }
+        let url = dir.appendingPathComponent("nested/mcp.json")
+        try AgentIntegrations.jsonInstall(at: url, command: "/x/cdesk-mcp")
+        XCTAssertEqual(AgentIntegrations.jsonCommand(at: url), "/x/cdesk-mcp")
+        let bad = dir.appendingPathComponent("bad.json")
+        try "[1,2]".write(to: bad, atomically: true, encoding: .utf8)
+        XCTAssertThrowsError(try AgentIntegrations.jsonInstall(at: bad, command: "/x"))
+        XCTAssertEqual(try String(contentsOf: bad, encoding: .utf8), "[1,2]")
+    }
+
+    func testCodexTomlDetection() throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("codex-\(UUID().uuidString).toml")
+        defer { try? FileManager.default.removeItem(at: url) }
+        try "model = \"x\"\n\n[mcp_servers.other]\ncommand = \"/bin/other\"\n\n[mcp_servers.cdesk]\ncommand = \"/Applications/CDesk.app/Contents/MacOS/cdesk-mcp\"\nargs = []\n".write(to: url, atomically: true, encoding: .utf8)
+        XCTAssertEqual(AgentIntegrations.codexCommand(at: url), "/Applications/CDesk.app/Contents/MacOS/cdesk-mcp")
+        XCTAssertNil(AgentIntegrations.codexCommand(at: url.appendingPathExtension("missing")))
+    }
+
+    func testServerPath() {
+        XCTAssertEqual(AgentIntegrations.serverPath(bundlePath: "/Users/me/Apps/CDesk.app"), "/Users/me/Apps/CDesk.app/Contents/MacOS/cdesk-mcp")
+        XCTAssertEqual(AgentIntegrations.serverPath(bundlePath: "/tmp/.build/debug"), "/Applications/CDesk.app/Contents/MacOS/cdesk-mcp")
+    }
 }

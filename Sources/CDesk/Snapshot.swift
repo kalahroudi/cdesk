@@ -24,10 +24,10 @@ enum SnapshotMode {
     struct Shot { let name: String; let dark: Bool; let size: CGSize; let make: @MainActor () -> AnyView }
 
     @MainActor static var shots: [Shot] {
-        func manager(_ s: Section, dark: Bool = false, sheet: SideSheet? = nil, stacks: Bool = false) -> Shot {
-            Shot(name: "manager-\(s.rawValue)\(stacks ? "-stacks" : "")\(sheet != nil ? "-sheet" : "")\(dark ? "-dark" : "")", dark: dark, size: CGSize(width: 1100, height: 740)) {
+        func manager(_ s: Section, dark: Bool = false, sheet: SideSheet? = nil, stacks: Bool = false, agents: Bool = false) -> Shot {
+            Shot(name: "manager-\(s.rawValue)\(stacks ? "-stacks" : "")\(agents ? "-agents" : "")\(sheet != nil ? "-sheet" : "")\(dark ? "-dark" : "")", dark: dark, size: CGSize(width: 1100, height: 740)) {
                 Nav.shared.section = s; AppModel.shared.sheet = sheet
-                return AnyView(ManagerView(stacksTab: stacks))
+                return AnyView(ManagerView(stacksTab: stacks, agentsTab: agents))
             }
         }
         func setup() -> Shot {
@@ -44,7 +44,7 @@ enum SnapshotMode {
         }
         return [pop(.overview), pop(.stacks), pop(.overview, dark: true),
                 manager(.overview), manager(.profiles), manager(.profiles, sheet: .recreate), manager(.containers), manager(.containers, stacks: true),
-                manager(.images), manager(.cleanup), manager(.settings), manager(.help), manager(.overview, dark: true), manager(.profiles, dark: true), setup()]
+                manager(.images), manager(.cleanup), manager(.settings), manager(.settings, agents: true), manager(.help), manager(.overview, dark: true), manager(.profiles, dark: true), setup()]
     }
 
     @MainActor static func render(_ shot: Shot, to dir: String) async {
@@ -116,6 +116,13 @@ struct PopoverShot: View {
             let spike: Double = i % 9 == 0 ? 3 : 0
             let wave: Double = 2 * sin(x / 3)
             samples.append(Sample(cpu: 2.5 + wave + spike, memGiB: 1.3 + x * 0.002))
+        }
+        if ProcessInfo.processInfo.environment["CDESK_DEMO_MANY"] == "1" {
+            for i in 0..<28 {
+                let id = String(format: "%012x", 0xabc000 + i)
+                m.containers.append(c(id, "service-\(i)-worker-1", "app/worker:\(i)", true, "", "fleet"))
+                m.stats[id] = ContainerStats(id: id, cpuPercent: Double(i) / 10, memoryBytes: Int64(20 + i * 7) * 1_048_576, memoryLimitBytes: Int64(8) << 30)
+            }
         }
         m.history = samples
         func img(_ id: String, _ r: String, _ t: String, _ size: String, _ n: Int, _ age: String) -> DockerImage { DockerImage(id: id, repository: r, tag: t, size: size, sizeBytes: parseSize(size), created: age, containers: n) }

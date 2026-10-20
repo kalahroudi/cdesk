@@ -8,6 +8,7 @@ import ColimaKit
 /// Actions open a right-side sheet and close it when done, so results show up without any navigation.
 struct ManagerView: View {
     var stacksTab = false
+    var agentsTab = false
     let model = AppModel.shared
     let nav = Nav.shared
     let prefs = Prefs.shared
@@ -43,7 +44,7 @@ struct ManagerView: View {
             case .containers: ContainersPane(initialTab: stacksTab ? .stacks : .containers)
             case .images: ImagesPane()
             case .cleanup: CleanupPane()
-            case .settings: SettingsPane()
+            case .settings: SettingsPane(initialTab: agentsTab ? .agents : .general)
             case .help: HelpPane()
             }
         }
