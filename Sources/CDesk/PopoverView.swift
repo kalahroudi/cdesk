@@ -55,7 +55,7 @@ struct PopoverView: View {
                     ForEach(model.profiles) { p in Button(p.name) { model.select(profile: p.name) } }
                 }.menuStyle(.borderlessButton).fixedSize()
             }
-            Toggle("", isOn: Binding(get: { model.isRunning || model.busy }, set: { on in on ? model.startColima() : model.stopColima() }))
+            Toggle("", isOn: Binding(get: { model.powerShownOn }, set: { on in on ? model.startColima() : model.stopColima() }))
                 .toggleStyle(.switch).labelsHidden().tint(Theme.ok).disabled(model.busy || model.missingTool != nil)
                 .accessibilityLabel(model.isRunning ? "Stop Colima" : "Start Colima")
         }
@@ -136,6 +136,7 @@ struct PopoverView: View {
                 .frame(maxWidth: .infinity, minHeight: 44)
                 .background(Theme.card, in: RoundedRectangle(cornerRadius: 10))
                 .overlay(RoundedRectangle(cornerRadius: 10).stroke(Theme.hairline))
+                .dimWhenDisabled()
         }.buttonStyle(.plain)
     }
 
@@ -218,6 +219,7 @@ struct MiniButton: View {
         Button(action: action) {
             Image(systemName: symbol).font(.system(size: 10.5, weight: .medium)).frame(width: 26, height: 26)
                 .background(Theme.fill, in: RoundedRectangle(cornerRadius: 6))
+                .dimWhenDisabled()
         }.buttonStyle(.plain).help(label).accessibilityLabel(label)
     }
 }

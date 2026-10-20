@@ -232,15 +232,43 @@ struct SectionLabel: View {
     }
 }
 
+/// Pill button. Reads the environment's enabled state, so a disabled button looks disabled (a plain
+/// `ButtonStyle` does not do that by itself).
 struct Pill: ButtonStyle {
     enum Kind { case primary, plain, danger }
     var kind: Kind = .plain
-    func makeBody(configuration c: Configuration) -> some View {
-        c.label.font(.system(size: 12.5, weight: kind == .primary ? .semibold : .regular))
-            .padding(.horizontal, 12).padding(.vertical, 6)
-            .foregroundStyle(kind == .primary ? Theme.onAccent : kind == .danger ? Theme.danger : Color.primary)
-            .background(kind == .primary ? Theme.accent.opacity(c.isPressed ? 0.8 : 1) : Theme.card, in: RoundedRectangle(cornerRadius: 8))
-            .overlay(RoundedRectangle(cornerRadius: 8).stroke(kind == .primary ? .clear : (kind == .danger ? Theme.danger.opacity(0.4) : Theme.hairline.opacity(2))))
-            .opacity(c.isPressed ? 0.85 : 1)
+    func makeBody(configuration: Configuration) -> some View { PillBody(configuration: configuration, kind: kind) }
+
+    private struct PillBody: View {
+        let configuration: ButtonStyleConfiguration
+        let kind: Kind
+        @Environment(\.isEnabled) private var enabled
+        var body: some View {
+            configuration.label.font(.system(size: 12.5, weight: kind == .primary ? .semibold : .regular))
+                .padding(.horizontal, 12).padding(.vertical, 6)
+                .foregroundStyle(foreground)
+                .background(background, in: RoundedRectangle(cornerRadius: 8))
+                .overlay(RoundedRectangle(cornerRadius: 8).stroke(stroke))
+                .opacity(enabled && configuration.isPressed ? 0.85 : 1)
+        }
+        private var foreground: Color {
+            guard enabled else { return Color.secondary.opacity(0.75) }
+            return kind == .primary ? Theme.onAccent : kind == .danger ? Theme.danger : Color.primary
+        }
+        private var background: Color {
+            guard enabled else { return Theme.fill }
+            return kind == .primary ? Theme.accent.opacity(configuration.isPressed ? 0.8 : 1) : Theme.card
+        }
+        private var stroke: Color {
+            guard enabled else { return .clear }
+            return kind == .primary ? .clear : (kind == .danger ? Theme.danger.opacity(0.4) : Theme.hairline.opacity(2))
+        }
     }
 }
+
+/// Dims anything custom-drawn (icon buttons, tiles) when it is disabled.
+struct DimWhenDisabled: ViewModifier {
+    @Environment(\.isEnabled) private var enabled
+    func body(content: Content) -> some View { content.opacity(enabled ? 1 : 0.4) }
+}
+extension View { func dimWhenDisabled() -> some View { modifier(DimWhenDisabled()) } }

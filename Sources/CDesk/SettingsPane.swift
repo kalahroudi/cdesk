@@ -65,7 +65,7 @@ struct SettingsPane: View {
         @Bindable var p = prefs
         return HStack(alignment: .top, spacing: 18) {
             SettingsGroup("Shell access") {
-                SettingRow("Open shells in", "cdesk hands off to your terminal app instead of embedding one, which keeps it light.") { Picker("", selection: $p.terminal) { ForEach(TerminalApp.allCases, id: \.self) { Text($0.rawValue) } }.labelsHidden().fixedSize() }
+                SettingRow("Open shells in", "Terminals found on this Mac. cdesk hands off to your terminal instead of embedding one, which keeps it light.") { Picker("", selection: $p.terminal) { ForEach(TerminalApp.installed) { Text($0.rawValue).tag($0) } }.labelsHidden().fixedSize() }
                 SettingRow("Shell to try first", "Falls back to sh when the image has no bash.") { Segmented(options: ShellChoice.allCases.map { ($0, $0.rawValue) }, selection: $p.shell) }
             }.frame(maxWidth: .infinity)
             SettingsGroup("Docker") {

@@ -146,5 +146,12 @@ struct PopoverShot: View {
         var draft = saved; draft.memoryGiB = 8; draft.mountType = .virtiofs; draft.dns = ["1.1.1.1", "8.8.8.8"]
         m.draft = draft
         m.loadedOnce = true; m.updatedAt = .now
+        switch ProcessInfo.processInfo.environment["CDESK_DEMO_STATE"] {
+        case "clean": m.draft = m.saved
+        case "busy":
+            var t = BackgroundTask(title: "Applying settings to default"); t.lines = ["Stopping colima…", "stopping vm"]
+            m.tasks = [t]
+        default: break
+        }
     }
 }

@@ -8,7 +8,25 @@ import AppKit
 enum ThemeChoice: String, CaseIterable { case system, light, dark
     var label: String { rawValue.capitalized }
 }
-enum TerminalApp: String, CaseIterable { case terminal = "Terminal", iterm = "iTerm2" }
+/// Terminal apps cdesk can hand a shell to. Only the ones installed on this Mac are offered.
+enum TerminalApp: String, CaseIterable, Identifiable {
+    case terminal = "Terminal", iterm = "iTerm2", ghostty = "Ghostty", alacritty = "Alacritty", kitty = "kitty", wezterm = "WezTerm"
+    var id: String { rawValue }
+
+    var bundleID: String {
+        switch self {
+        case .terminal: "com.apple.Terminal"
+        case .iterm: "com.googlecode.iterm2"
+        case .ghostty: "com.mitchellh.ghostty"
+        case .alacritty: "org.alacritty"
+        case .kitty: "net.kovidgoyal.kitty"
+        case .wezterm: "com.github.wez.wezterm"
+        }
+    }
+    var appURL: URL? { NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) }
+    var isInstalled: Bool { self == .terminal || appURL != nil }
+    static var installed: [TerminalApp] { allCases.filter(\.isInstalled) }
+}
 enum UpdateChannel: String, CaseIterable { case releases, main
     var label: String { self == .releases ? "Releases" : "Main branch" }
 }
@@ -40,7 +58,8 @@ final class Prefs {
     private init() {
         d.register(defaults: ["autoStartColima": true, "switchDockerContext": true, "notify": true, "refreshSeconds": 5, "showDockIcon": true, "autoCheckUpdates": true, "shell": "bash", "launchAtLoginDefaulted": false])
         theme = ThemeChoice(rawValue: d.string(forKey: "theme") ?? "") ?? .system
-        terminal = TerminalApp(rawValue: d.string(forKey: "terminal") ?? "") ?? .terminal
+        let chosen = TerminalApp(rawValue: d.string(forKey: "terminal") ?? "") ?? .terminal
+        terminal = chosen.isInstalled ? chosen : .terminal
         shell = ShellChoice(rawValue: d.string(forKey: "shell") ?? "") ?? .bash
         autoStartColima = d.bool(forKey: "autoStartColima")
         stopOnQuit = d.bool(forKey: "stopOnQuit")

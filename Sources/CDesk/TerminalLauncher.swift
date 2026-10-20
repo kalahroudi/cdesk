@@ -8,16 +8,33 @@ import ColimaKit
 /// Opens commands in the user's terminal app. cdesk does not embed a terminal: handing off keeps the app light
 /// and gives you your own shell setup.
 enum TerminalLauncher {
+    /// Runs `command` in the chosen terminal. With `keepOpen` the window waits for Return at the end, for
+    /// one-off tasks whose output you want to read (some terminals close the window when the command exits).
     @MainActor
-    static func run(_ command: String) {
-        let escaped = command.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"")
-        let script: String
-        switch Prefs.shared.terminal {
+    static func run(_ command: String, keepOpen: Bool = false) {
+        let full = keepOpen ? "\(command); echo; echo 'Finished. Press Return to close.'; read _" : command
+        let app = Prefs.shared.terminal.isInstalled ? Prefs.shared.terminal : .terminal
+        switch app {
         case .terminal:
-            script = "tell application \"Terminal\"\nactivate\ndo script \"\(escaped)\"\nend tell"
+            runAppleScript("tell application \"Terminal\"\nactivate\ndo script \"\(escape(full))\"\nend tell")
         case .iterm:
-            script = "tell application \"iTerm\"\nactivate\nset w to (create window with default profile)\ntell current session of w to write text \"\(escaped)\"\nend tell"
+            runAppleScript("tell application \"iTerm\"\nactivate\nset w to (create window with default profile)\ntell current session of w to write text \"\(escape(full))\"\nend tell")
+        case .ghostty, .alacritty, .kitty, .wezterm:
+            // These take a command on their command line. `open -n` starts a window running it.
+            guard let url = app.appURL else { return }
+            let tail: [String]
+            switch app {
+            case .wezterm: tail = ["start", "--", "/bin/sh", "-c", full]
+            case .kitty: tail = ["/bin/sh", "-c", full]
+            default: tail = ["-e", "/bin/sh", "-c", full]
+            }
+            Task.detached { _ = try? await Shell.run("open", ["-na", url.path, "--args"] + tail, timeout: 15) }
         }
+    }
+
+    private static func escape(_ s: String) -> String { s.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"") }
+
+    private static func runAppleScript(_ script: String) {
         Task.detached { _ = try? await Shell.run("osascript", ["-e", script], timeout: 15) }
     }
 

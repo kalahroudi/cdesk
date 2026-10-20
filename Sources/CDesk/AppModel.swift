@@ -86,6 +86,13 @@ final class AppModel {
     var needsSetup: Bool { missingTool != nil || (loadedOnce && profiles.isEmpty) }
     var busy: Bool { tasks.contains { $0.state == .running } }
     var runningTask: BackgroundTask? { tasks.last { $0.state == .running } }
+    /// What the power switch should show. While a task runs it shows where the VM is heading, not where it was.
+    var powerShownOn: Bool {
+        guard let t = runningTask else { return isRunning }
+        return !t.title.hasPrefix("Stopping")
+    }
+    /// True while a task that changes this VM's settings is running (apply, recreate, create).
+    var isChangingVM: Bool { runningTask.map { $0.title.hasPrefix("Applying") || $0.title.hasPrefix("Recreating") || $0.title.hasPrefix("Creating") } ?? false }
 
     var restartPending: Bool { draft.differsRestartably(from: saved) }
     var recreateReasons: [ColimaConfig.Field] { draft.recreateReasons(comparedTo: saved) }
@@ -164,6 +171,9 @@ final class AppModel {
         Task { await refresh(forceInventory: true) }
     }
 
+    /// What colima has saved is the truth; the draft (the user's edits) is left alone.
+    func loadConfigKeepingDraft() { saved = ColimaConfig.load(profile: selected) ?? saved }
+
     func loadConfig() {
         let c = ColimaConfig.load(profile: selected) ?? ColimaConfig()
         saved = c; draft = c
@@ -171,7 +181,7 @@ final class AppModel {
 
     // MARK: Background tasks (non-blocking)
 
-    func runTask(_ title: String, notifyDone: Bool = true, work: @escaping @Sendable (@escaping @Sendable (String) -> Void) async throws -> Void) {
+    func runTask(_ title: String, notifyDone: Bool = true, after: (@MainActor (Bool) -> Void)? = nil, work: @escaping @Sendable (@escaping @Sendable (String) -> Void) async throws -> Void) {
         var t = BackgroundTask(title: title)
         t.lines = ["Starting…"]
         let id = t.id
@@ -187,9 +197,11 @@ final class AppModel {
                     }
                 }
                 finish(id, .done)
+                after?(true)
                 if notifyDone { notify("\(title) finished") }
             } catch {
                 finish(id, .failed(error.localizedDescription))
+                after?(false)
                 notify("\(title) failed", body: error.localizedDescription)
             }
             await refresh(forceInventory: true)
@@ -264,11 +276,13 @@ final class AppModel {
     /// Apply settings that colima can change in place: stop, then start with the new flags.
     func applyAndRestart() {
         let name = selected, cfg = restartOnlyConfig, cm = colima, wasRunning = isRunning
-        runTask("Applying settings to \(name)") { log in
+        // `saved` only moves once colima has really applied the change, so the button stays honest if it fails.
+        runTask("Applying settings to \(name)", after: { [self] ok in
+            if ok { saved = ColimaConfig.load(profile: name) ?? cfg } else { loadConfigKeepingDraft() }
+        }) { log in
             if wasRunning { try await cm.stop(profile: name, onLine: log) }
             try await cm.start(profile: name, config: cfg, onLine: log)
         }
-        saved = cfg
     }
 
     struct Backup { var volumes: [String] = []; var files = false }
@@ -276,7 +290,9 @@ final class AppModel {
     /// Delete and rebuild the VM. Backups run first, while the old VM is still there.
     func recreate(config: ColimaConfig, backup: Backup = Backup()) {
         let name = selected, cm = colima, d = docker, images = (inventory?.images ?? []).filter { !$0.isDangling }.map(\.reference)
-        runTask("Recreating \(name)") { log in
+        runTask("Recreating \(name)", after: { [self] ok in
+            if ok { saved = ColimaConfig.load(profile: name) ?? config; draft = saved } else { loadConfigKeepingDraft() }
+        }) { log in
             if backup.files || !backup.volumes.isEmpty {
                 let dir = NSHomeDirectory() + "/Colima Backups/\(name)"
                 try FileManager.default.createDirectory(atPath: dir, withIntermediateDirectories: true)
@@ -292,14 +308,14 @@ final class AppModel {
             }
             try await cm.recreate(profile: name, config: config, onLine: log)
         }
-        saved = config; draft = config
     }
 
     func createProfile(name: String, config: ColimaConfig) {
         let cm = colima
-        runTask("Creating profile \(name)") { log in try await cm.start(profile: name, config: config, onLine: log) }
         selected = name
-        saved = config; draft = config
+        runTask("Creating profile \(name)", after: { [self] ok in
+            if ok { saved = ColimaConfig.load(profile: name) ?? config; draft = saved }
+        }) { log in try await cm.start(profile: name, config: config, onLine: log) }
     }
 
     func deleteProfile(_ name: String) {

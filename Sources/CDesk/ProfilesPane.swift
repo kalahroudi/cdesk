@@ -23,8 +23,8 @@ struct ProfilesPane: View {
                             Button("Use fixed DNS & restart (no internet in containers)") { model.repairDNS() }
                         }.menuStyle(.borderlessButton).fixedSize().disabled(model.busy)
                     }
-                    if model.profile != nil { Button("Delete…") { model.sheet = .removeProfile(model.selected) }.buttonStyle(Pill(kind: .danger)) }
-                    Button("New profile") { model.sheet = .newProfile }.buttonStyle(Pill())
+                    if model.profile != nil { Button("Delete…") { model.sheet = .removeProfile(model.selected) }.buttonStyle(Pill(kind: .danger)).disabled(model.busy) }
+                    Button("New profile") { model.sheet = .newProfile }.buttonStyle(Pill()).disabled(model.busy)
                 }
             } tabs: {
                 VStack(alignment: .leading, spacing: 4) {
@@ -184,18 +184,28 @@ struct ProfilesPane: View {
     // MARK: Action bar
 
     private var actionBar: some View {
-        HStack(spacing: 12) {
-            if model.hasPendingChanges {
+        let working = model.busy
+        let applying = model.runningTask?.title.hasPrefix("Applying") == true
+        let recreating = model.runningTask?.title.hasPrefix("Recreating") == true
+        return HStack(spacing: 12) {
+            if let t = model.runningTask {
+                ProgressView().controlSize(.small)
+                Text(t.title + "…").font(.system(size: 12.5, weight: .medium)).lineLimit(1)
+                Text(t.lines.last ?? "").font(.system(size: 11.5, design: .monospaced)).foregroundStyle(.secondary).lineLimit(1)
+            } else if model.hasPendingChanges {
                 (Text("\(model.recreateReasons.count + (model.restartPending ? 1 : 0)) pending changes").bold() + Text(model.restartPending ? " · restart applies resources and network" : "") + Text(model.recreateReasons.isEmpty ? "" : " · \(model.recreateReasons.map { $0 == .vmType ? "VM type" : $0 == .mountType ? "mount type" : $0 == .arch ? "architecture" : "runtime" }.joined(separator: ", ")): recreate VM"))
                     .font(.system(size: 12.5)).lineLimit(2)
             } else { Text("No pending changes").font(.system(size: 12.5)).foregroundStyle(.secondary) }
             Spacer()
-            Button("Discard") { model.draft = model.saved }.buttonStyle(.plain).foregroundStyle(.secondary).disabled(!model.hasPendingChanges)
+            Button("Discard") { model.draft = model.saved }.buttonStyle(.plain).foregroundStyle(.secondary).dimWhenDisabled().disabled(!model.hasPendingChanges || working)
             if model.profile == nil {
-                Button("Create & start") { model.createProfile(name: model.selected, config: model.draft) }.buttonStyle(Pill(kind: .primary))
+                Button("Create & start") { model.createProfile(name: model.selected, config: model.draft) }.buttonStyle(Pill(kind: .primary)).disabled(working)
             } else {
-                Button("Apply & Restart") { model.applyAndRestart() }.buttonStyle(Pill()).disabled(!model.restartPending || model.busy)
-                Button("Recreate VM…") { model.sheet = .recreate }.buttonStyle(Pill(kind: .danger)).disabled(model.recreateReasons.isEmpty || model.busy)
+                // Apply is live only when there is a change colima can take with a restart, and nothing else is running.
+                Button { model.applyAndRestart() } label: { Text(applying ? "Applying…" : "Apply & Restart") }
+                    .buttonStyle(Pill(kind: model.restartPending && !working ? .primary : .plain)).disabled(!model.restartPending || working)
+                Button { model.sheet = .recreate } label: { Text(recreating ? "Recreating…" : "Recreate VM…") }
+                    .buttonStyle(Pill(kind: .danger)).disabled(model.recreateReasons.isEmpty || working)
             }
         }.padding(.horizontal, 22).padding(.vertical, 10).background(Theme.sidebar.opacity(0.7)).overlay(alignment: .top) { Divider() }
     }

@@ -33,7 +33,7 @@ struct SetupView: View {
                     Text("Install Homebrew first").font(.system(size: 13, weight: .semibold))
                     Text("Homebrew asks for your password, so it runs in Terminal where you can see it. Come back here when it is done.").font(.system(size: 12)).foregroundStyle(.secondary).fixedSize(horizontal: false, vertical: true)
                     HStack {
-                        Button("Install Homebrew in Terminal") { TerminalLauncher.run(SetupState.homebrewInstallCommand) }.buttonStyle(Pill(kind: .primary))
+                        Button("Install Homebrew in Terminal") { TerminalLauncher.run(SetupState.homebrewInstallCommand, keepOpen: true) }.buttonStyle(Pill(kind: .primary))
                         Button("I installed it, check again") { Task { await model.refresh() } }.buttonStyle(Pill())
                     }
                     Link("About Homebrew (brew.sh)", destination: URL(string: "https://brew.sh")!).font(.system(size: 11.5))
