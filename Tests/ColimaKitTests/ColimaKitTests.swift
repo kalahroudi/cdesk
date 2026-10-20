@@ -137,4 +137,47 @@ final class ColimaKitTests: XCTestCase {
         XCTAssertEqual(parseSize("24.6kB"), 24_600)
         XCTAssertEqual(parseSize("0B"), 0)
     }
+
+    // MARK: updates
+
+    func testVersionOrdering() {
+        XCTAssertTrue(Version.isNewer("v0.2.0", than: "0.1.9"))
+        XCTAssertTrue(Version.isNewer("1.0", than: "0.9.9"))
+        XCTAssertFalse(Version.isNewer("0.1.0", than: "0.1.0"))
+        XCTAssertTrue(Version.isNewer("0.2.0", than: "0.2.0-rc.1"))
+        XCTAssertFalse(Version.isNewer("0.2.0-rc.1", than: "0.2.0"))
+        XCTAssertFalse(Version.isNewer("garbage", than: "0.1.0"))
+    }
+
+    func testParseRelease() {
+        let json = #"{"tag_name":"v0.2.0","draft":false,"prerelease":false,"body":"- Faster start\n- Fix DNS","assets":[{"name":"CDesk-0.2.0.dmg","browser_download_url":"https://example.com/CDesk-0.2.0.dmg"},{"name":"SHA256SUMS","browser_download_url":"https://example.com/SHA256SUMS"}]}"#
+        let r = UpdateChecker.parseRelease(Data(json.utf8))
+        XCTAssertEqual(r?.version, "0.2.0")
+        XCTAssertEqual(r?.dmgName, "CDesk-0.2.0.dmg")
+        XCTAssertEqual(r?.notes, ["Faster start", "Fix DNS"])
+        XCTAssertNotNil(r?.checksumsURL)
+        XCTAssertNil(UpdateChecker.parseRelease(Data(#"{"tag_name":"v1","draft":true,"assets":[]}"#.utf8)))
+        XCTAssertNil(UpdateChecker.parseRelease(Data(#"{"tag_name":"v1","assets":[]}"#.utf8)))
+    }
+
+    func testChecksumLookup() {
+        let sums = "abc123  CDesk-0.2.0.dmg\nDEF456 *Other.dmg\n"
+        XCTAssertEqual(UpdateChecker.checksum(in: sums, for: "CDesk-0.2.0.dmg"), "abc123")
+        XCTAssertEqual(UpdateChecker.checksum(in: sums, for: "Other.dmg"), "def456")
+        XCTAssertNil(UpdateChecker.checksum(in: sums, for: "missing.dmg"))
+    }
+
+    func testDecideCompare() throws {
+        let ahead = #"{"status":"ahead","ahead_by":2,"commits":[{"commit":{"message":"First\n\nbody"}},{"commit":{"message":"Second"}}]}"#
+        guard case .available(let info) = try UpdateChecker.decide(compareJSON: Data(ahead.utf8), head: "abcdef123456") else { return XCTFail() }
+        XCTAssertEqual(info.aheadBy, 2); XCTAssertEqual(info.summaries, ["First", "Second"]); XCTAssertEqual(info.shortSha, "abcdef1")
+        XCTAssertEqual(try UpdateChecker.decide(compareJSON: Data(#"{"status":"behind"}"#.utf8), head: "x"), .upToDate)
+        guard case .notComparable = try UpdateChecker.decide(compareJSON: Data(#"{"status":"diverged"}"#.utf8), head: "x") else { return XCTFail() }
+    }
+
+    func testBuildInfoDirty() {
+        let b = BuildInfo(commit: "0123456789abcdef-dirty")
+        XCTAssertTrue(b.isDirty); XCTAssertEqual(b.cleanCommit, "0123456789abcdef"); XCTAssertEqual(b.shortCommit, "0123456")
+        XCTAssertNil(BuildInfo(commit: "unknown").cleanCommit)
+    }
 }

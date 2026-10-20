@@ -55,12 +55,13 @@ public enum Shell {
         return nil
     }
 
-    private static func makeProcess(_ tool: String, _ args: [String]) throws -> Process {
+    private static func makeProcess(_ tool: String, _ args: [String], cwd: URL? = nil, env: [String: String] = [:]) throws -> Process {
         guard let path = find(tool) else { throw ShellError.toolNotFound(tool) }
         let p = Process()
         p.executableURL = URL(fileURLWithPath: path)
         p.arguments = args
-        p.environment = environment
+        p.environment = environment.merging(env) { _, new in new }
+        p.currentDirectoryURL = cwd
         return p
     }
 
@@ -105,28 +106,29 @@ public enum Shell {
     }
 
     /// Run a long task and report each output line (stdout and stderr) as it arrives.
-    public static func stream(_ tool: String, _ args: [String], onLine: @escaping @Sendable (String) -> Void) async throws -> Int32 {
-        let process = try makeProcess(tool, args)
+    public static func stream(_ tool: String, _ args: [String], cwd: URL? = nil, env: [String: String] = [:], onLine: @escaping @Sendable (String) -> Void) async throws -> Int32 {
+        let process = try makeProcess(tool, args, cwd: cwd, env: env)
         let pipe = Pipe()
         process.standardOutput = pipe
         process.standardError = pipe
         process.standardInput = FileHandle.nullDevice
         let lock = NSLock()
-        var carry = ""
+        final class Carry: @unchecked Sendable { var s = "" }
+        let carry = Carry()
         pipe.fileHandleForReading.readabilityHandler = { h in
             let d = h.availableData
             if d.isEmpty { return }
             lock.lock(); defer { lock.unlock() }
-            carry += String(decoding: d, as: UTF8.self)
-            while let nl = carry.firstIndex(where: { $0 == "\n" || $0 == "\r" }) {
-                let line = String(carry[..<nl]); carry.removeSubrange(...nl)
+            carry.s += String(decoding: d, as: UTF8.self)
+            while let nl = carry.s.firstIndex(where: { $0 == "\n" || $0 == "\r" }) {
+                let line = String(carry.s[..<nl]); carry.s.removeSubrange(...nl)
                 if !line.isEmpty { onLine(line) }
             }
         }
         return try await withCheckedThrowingContinuation { cont in
             process.terminationHandler = { proc in
                 pipe.fileHandleForReading.readabilityHandler = nil
-                lock.lock(); let rest = carry + String(decoding: pipe.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self); lock.unlock()
+                lock.lock(); let rest = carry.s + String(decoding: pipe.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self); lock.unlock()
                 for l in rest.split(whereSeparator: \.isNewline) { onLine(String(l)) }
                 cont.resume(returning: proc.terminationStatus)
             }

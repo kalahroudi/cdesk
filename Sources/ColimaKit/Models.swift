@@ -113,6 +113,7 @@ public struct DockerInventory: Sendable {
     public var volumes: [Volume]
     public var usage: [DiskUsageRow]
     public var reclaimableBytes: Int64 { usage.reduce(0) { $0 + $1.reclaimableBytes } }
+    public init(images: [DockerImage], volumes: [Volume], usage: [DiskUsageRow]) { self.images = images; self.volumes = volumes; self.usage = usage }
 }
 
 /// Parses docker's human sizes ("2.71GB", "24.6kB", "292.4MB (85%)") into bytes. Docker uses powers of 1000.

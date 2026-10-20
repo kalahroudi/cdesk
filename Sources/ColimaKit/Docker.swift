@@ -29,7 +29,7 @@ public struct Docker: Sendable {
     public init(profile: String = "default") { context = profile == "default" ? "colima" : "colima-\(profile)" }
     public init(context: String) { self.context = context }
 
-    func run(_ args: [String], timeout: TimeInterval? = 60) async throws -> String {
+    public func run(_ args: [String], timeout: TimeInterval? = 60) async throws -> String {
         try await Shell.check("docker", ["--context", context] + args, timeout: timeout)
     }
 
