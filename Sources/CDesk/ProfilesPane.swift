@@ -244,14 +244,14 @@ struct FormRow<Control: View>: View {
             HStack(spacing: 6) {
                 Text(title).font(.system(size: 13)).fixedSize()
                 HelpTip(title: help.0, text: help.1)
-                Text(flag).font(.system(size: 11, design: .monospaced)).foregroundStyle(.secondary).lineLimit(1).fixedSize()
+                Text(flag).font(.system(size: 11, design: .monospaced)).foregroundStyle(.secondary).lineLimit(1).layoutPriority(-1)
                 if changed { Circle().fill(Color.orange).frame(width: 7, height: 7).accessibilityLabel("changed") }
                 if let n = note { Text(n).font(.system(size: 11.5)).foregroundStyle(.secondary).fixedSize() }
                 if let l = lock { Label(l, systemImage: "lock.fill").font(.system(size: 10.5, weight: .semibold)).labelStyle(.titleAndIcon).fixedSize().padding(.horizontal, 6).padding(.vertical, 1).background(Theme.fill, in: Capsule()).foregroundStyle(.secondary) }
                 if let b = badge { Badge(text: b, kind: b == "experimental" ? .warn : .accent) }
             }
             Spacer(minLength: 8)
-            control
+            control.fixedSize()
         }.padding(.vertical, 8).overlay(alignment: .top) { Divider().opacity(0.6) }
     }
 }

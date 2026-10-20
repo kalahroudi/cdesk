@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CDesk for agents (MCP)</title>
+<meta name="description" content="Set up the cdesk-mcp Model Context Protocol server for Claude Code, Claude Desktop or Cursor, with the full tool list and safety model.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<link rel="stylesheet" href="style.css">
+<script src="site.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+<div class="wrap bar">
+<a class="brand" href="index.html"><img src="assets/logo.svg" alt="" width="32" height="32"><span>CDesk</span></a>
+<button type="button" class="menu-btn" aria-expanded="false" aria-controls="site-nav">Menu</button>
+<nav id="site-nav" aria-label="Main">
+<ul><li><a href="index.html">Home</a></li><li><a href="install.html">Install</a></li><li><a href="usage.html">Usage</a></li><li><a href="optimization.html">Optimisation</a></li><li><a href="agents.html" aria-current="page">Agents</a></li><li><a href="https://github.com/kalahroudi/cdesk">GitHub</a></li></ul>
+</nav>
+<button type="button" class="theme-btn" aria-label="Colour theme: System. Click to change.">Theme: System</button>
+</div>
+</header>
+<main id="main">
+<section class="page-hero"><div class="wrap"><h1>Built for agents</h1><p class="lead">The app bundle includes <code>cdesk-mcp</code>, a stdio Model Context Protocol server. It works without the app being open.</p></div></section><section class="section " id="setup"><div class="wrap"><h2>Setup</h2><p>The server lives at:</p><div class="code"><span class="code-label">Path</span><pre><code>/Applications/CDesk.app/Contents/MacOS/cdesk-mcp</code></pre><button type="button" class="copy" aria-label="Copy to clipboard">Copy</button></div><h3>Claude Code</h3><div class="code"><span class="code-label">Terminal</span><pre><code>claude mcp add cdesk -- /Applications/CDesk.app/Contents/MacOS/cdesk-mcp</code></pre><button type="button" class="copy" aria-label="Copy to clipboard">Copy</button></div><h3>Claude Desktop, Cursor and others</h3><p>Add this to the client&rsquo;s MCP configuration JSON:</p><div class="code"><span class="code-label">JSON</span><pre><code>{
+  &quot;mcpServers&quot;: {
+    &quot;cdesk&quot;: {
+      &quot;command&quot;: &quot;/Applications/CDesk.app/Contents/MacOS/cdesk-mcp&quot;
+    }
+  }
+}</code></pre><button type="button" class="copy" aria-label="Copy to clipboard">Copy</button></div><p>The Settings, then Agents (MCP) tab in the app also shows this.</p></div></section><section class="section alt" id="tools"><div class="wrap"><h2>Tools</h2><p>All tools take an optional <code>profile</code> (default <code>default</code>).</p><div class="table-wrap"><table class="wide"><thead><tr><th scope="col">Tool</th><th scope="col">What it does</th><th scope="col">Safety</th></tr></thead><tbody><tr><th scope="row"><code>colima_profiles</code></th><td>List Colima profiles.</td><td>-</td></tr><tr><th scope="row"><code>colima_config</code></th><td>Show a profile&rsquo;s configuration.</td><td>-</td></tr><tr><th scope="row"><code>colima_recommend</code></th><td>Recommend a size for this Mac.</td><td>-</td></tr><tr><th scope="row"><code>colima_start</code></th><td>Start a profile.</td><td>-</td></tr><tr><th scope="row"><code>colima_stop</code></th><td>Stop a profile.</td><td>-</td></tr><tr><th scope="row"><code>colima_restart</code></th><td>Restart a profile.</td><td>-</td></tr><tr><th scope="row"><code>colima_recreate</code></th><td>Delete and recreate a profile.</td><td>DESTRUCTIVE: <code>confirm_name</code> must equal the profile name.</td></tr><tr><th scope="row"><code>docker_containers</code></th><td>List containers.</td><td>-</td></tr><tr><th scope="row"><code>docker_stats</code></th><td>Container resource use.</td><td>-</td></tr><tr><th scope="row"><code>docker_stacks</code></th><td>List Compose stacks.</td><td>-</td></tr><tr><th scope="row"><code>docker_container_action</code></th><td>start, stop, restart, kill, pause or unpause a container.</td><td>-</td></tr><tr><th scope="row"><code>docker_stack_action</code></th><td>Act on a whole Compose stack.</td><td>-</td></tr><tr><th scope="row"><code>docker_container_logs</code></th><td>Read container logs.</td><td>-</td></tr><tr><th scope="row"><code>docker_exec</code></th><td>Run a command in a container (non-interactive).</td><td>-</td></tr><tr><th scope="row"><code>docker_remove_container</code></th><td>Remove a container.</td><td>-</td></tr><tr><th scope="row"><code>docker_images</code></th><td>List images.</td><td>-</td></tr><tr><th scope="row"><code>docker_volumes</code></th><td>List volumes.</td><td>-</td></tr><tr><th scope="row"><code>docker_disk_usage</code></th><td>Show Docker disk usage.</td><td>-</td></tr><tr><th scope="row"><code>docker_pull</code></th><td>Pull an image.</td><td>-</td></tr><tr><th scope="row"><code>docker_remove_image</code></th><td>Remove an image.</td><td>-</td></tr><tr><th scope="row"><code>docker_remove_volume</code></th><td>Remove a volume.</td><td>DESTRUCTIVE: <code>confirm_name</code> must equal the volume name.</td></tr><tr><th scope="row"><code>docker_prune</code></th><td>Prune unused data. <code>kind</code> is one of dangling-images, unused-images, stopped-containers, unused-volumes, build-cache.</td><td>Needs <code>confirm: true</code>.</td></tr></tbody></table></div></div></section><section class="section " id="safety"><div class="wrap"><h2>Safety model</h2><ul class="checks"><li>Destructive tools refuse to run without an explicit confirmation: <code>colima_recreate</code> and <code>docker_remove_volume</code> need <code>confirm_name</code> to equal the name, and <code>docker_prune</code> needs <code>confirm</code> set to true.</li><li><code>docker_exec</code> is non-interactive.</li><li>Tell your agent to ask you before any destructive call. The prompt below does.</li></ul></div></section><section class="section alt" id="examples"><div class="wrap"><h2>Example prompts</h2><ul class="checks"><li>&ldquo;What is running in Colima right now, and how much memory is it using?&rdquo;</li><li>&ldquo;Recommend a Colima size for this Mac and start a profile with it.&rdquo;</li><li>&ldquo;Show the last 100 log lines of my api container.&rdquo;</li><li>&ldquo;Restart the whole <em>web</em> stack.&rdquo;</li><li>&ldquo;Show what is reclaimable, then ask me before pruning anything.&rdquo;</li></ul></div></section><section class="section " id="prompt"><div class="wrap"><h2>Agent prompt</h2><p>One prompt to install CDesk, register the MCP server and start a profile.</p><div class="callout"><h3>Agent prompt</h3><p>Paste this into an AI coding agent such as Claude Code and it will do the setup for you. It will not delete anything without asking.</p><div class="code"><span class="code-label">Prompt</span><pre><code>Install CDesk on this Mac. 1) Check that Homebrew is installed; if colima or docker are missing run `brew install colima docker`. 2) Run `curl -fsSL https://raw.githubusercontent.com/kalahroudi/cdesk/main/scripts/install.sh | bash`. 3) Register its MCP server: `claude mcp add cdesk -- /Applications/CDesk.app/Contents/MacOS/cdesk-mcp`. 4) Call colima_profiles; if there are none, call colima_recommend and start a profile with the recommended cpus/memory_gib/disk_gib via colima_start. 5) Tell me what is running. Never call colima_recreate, docker_remove_volume or docker_prune without asking me first.</code></pre><button type="button" class="copy" aria-label="Copy to clipboard">Copy</button></div></div></div></section>
+</main>
+<footer class="site-footer">
+<div class="wrap foot">
+<div><strong>CDesk</strong> is open source under the <a href="https://github.com/kalahroudi/cdesk/blob/main/LICENSE">Apache-2.0</a> license.<br>
+By <a href="https://github.com/kalahroudi">kalahroudi</a>. Source on <a href="https://github.com/kalahroudi/cdesk">GitHub</a> &middot; <a href="https://github.com/kalahroudi/cdesk/releases">Releases</a>.</div>
+<div>Credits: <a href="https://github.com/abiosoft/colima">Colima</a> by Abiosoft; optimisation guidance from <a href="https://iniakunhuda.medium.com/2-years-with-colima-the-optimization-guide-i-wish-i-had-from-day-one-8b89b8155285">Miftahul Huda&rsquo;s guide</a>. CDesk is not affiliated with either.</div>
+</div>
+</footer>
+</body>
+</html>

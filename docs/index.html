@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CDesk - a friendly Colima manager for macOS</title>
+<meta name="description" content="CDesk is a light, native macOS menu bar and Dock app that manages Colima and the Docker containers, stacks, images and volumes inside it.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" type="image/svg+xml" href="assets/logo.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<link rel="stylesheet" href="style.css">
+<script src="site.js"></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+<header class="site-header">
+<div class="wrap bar">
+<a class="brand" href="index.html"><img src="assets/logo.svg" alt="" width="32" height="32"><span>CDesk</span></a>
+<button type="button" class="menu-btn" aria-expanded="false" aria-controls="site-nav">Menu</button>
+<nav id="site-nav" aria-label="Main">
+<ul><li><a href="index.html" aria-current="page">Home</a></li><li><a href="install.html">Install</a></li><li><a href="usage.html">Usage</a></li><li><a href="optimization.html">Optimisation</a></li><li><a href="agents.html">Agents</a></li><li><a href="https://github.com/kalahroudi/cdesk">GitHub</a></li></ul>
+</nav>
+<button type="button" class="theme-btn" aria-label="Colour theme: System. Click to change.">Theme: System</button>
+</div>
+</header>
+<main id="main">
+<section class="hero"><div class="wrap hero-grid">
+<div class="hero-text">
+<img class="hero-logo" src="assets/logo.svg" alt="CDesk logo: an isometric teal cube on a deep teal tile" width="88" height="88">
+<h1>Colima, with a friendly face.</h1>
+<p class="lead">CDesk is a light, native macOS app that manages Colima and the Docker containers, Compose stacks, images and volumes inside it, from the menu bar or a full Manager window.</p>
+<div class="btns">
+<a class="btn primary" href="install.html">Install</a>
+<a class="btn" href="https://github.com/kalahroudi/cdesk">GitHub</a>
+<a class="btn" href="usage.html">Docs</a>
+</div>
+<p class="small muted">macOS 14+ &middot; Apple silicon recommended &middot; Apache-2.0 &middot; about 40 MB of memory when idle</p>
+</div>
+<figure class="shot hero-shot"><img class="only-light" src="assets/screens/popover-overview.jpg" alt="The CDesk menu bar popover showing the running Colima profile, CPU and memory use, and containers" width="500" height="520" fetchpriority="high" decoding="async"><img class="only-dark" src="assets/screens/popover-overview-dark.jpg" alt="The CDesk menu bar popover showing the running Colima profile, CPU and memory use, and containers" width="500" height="520" fetchpriority="high" decoding="async"><figcaption>The menu bar popover, attached to the menu bar icon by an arrow.</figcaption></figure>
+</div></section><section class="section "><div class="wrap"><h2>Why we made it</h2><div class="grid two">
+<div class="card"><h3>The problem</h3>
+<p>Docker Desktop is heavy. Colima is an excellent, lightweight alternative that runs a Linux VM through Lima, but it is command line only. Its best settings are easy to get wrong:</p>
+<ul>
+<li>Several settings are fixed when the VM is created, and changing them means deleting and recreating it.</li>
+<li>DNS can break after you switch Wi-Fi or connect to a VPN.</li>
+<li>Many people leave slow sshfs mounts in place for years.</li>
+</ul></div>
+<div class="card"><h3>What CDesk does</h3>
+<p>CDesk gives Colima a small, friendly UI and explains every option. It applies the optimisation guidance from the community guide <a href="https://iniakunhuda.medium.com/2-years-with-colima-the-optimization-guide-i-wish-i-had-from-day-one-8b89b8155285">&ldquo;2 Years with Colima&rdquo;</a> by Miftahul Huda: sensible defaults for your Mac, locked settings clearly marked, and a guided flow for the changes that need a recreate.</p>
+<p><a href="optimization.html">Read the optimisation approach</a></p></div>
+</div></div></section><section class="section alt" id="light"><div class="wrap"><h2>Light by design</h2><div class="stats">
+<div class="stat"><div class="num">~40 MB</div><div class="lbl">memory when idle (measured with <code>footprint</code>)</div></div>
+<div class="stat"><div class="num">6.7 MB</div><div class="lbl">app bundle</div></div>
+<div class="stat"><div class="num">~3 MB</div><div class="lbl">DMG download</div></div>
+<div class="stat"><div class="num">0</div><div class="lbl">third-party dependencies: pure SwiftUI and AppKit</div></div>
+</div>
+<ul class="checks">
+<li>Nothing is polled while the popover and the Manager window are both closed, so an idle app uses almost no CPU.</li>
+<li>While a window is visible, the refresh interval is 2, 5 or 15 seconds, your choice.</li>
+<li>Heavier data (images, volumes, disk usage) is only fetched when the Manager is open, and at most every 20 seconds.</li>
+<li>Manager window views are destroyed when it closes, and popover views are released when it closes.</li>
+<li>Lists are paginated (25 per page) and searchable, so nothing loads everything at once.</li>
+<li>Pages show loading skeletons and appear fully loaded.</li>
+<li>Long tasks (start, recreate, pull, prune) run in the background with progress and a macOS notification.</li>
+<li>Shells are handed to your own Terminal.app or iTerm2 instead of an embedded terminal, which keeps CDesk light and uses your own shell setup.</li>
+<li>Only one instance can run. The update check runs at most once a day, at launch.</li>
+</ul></div></section><section class="section "><div class="wrap"><h2>Optimised the way the community guide recommends</h2><p>CDesk does not just show Colima&rsquo;s options. It nudges you to the settings the community guide recommends, and tells you plainly when a change needs a restart or a full recreate.</p>
+<ul class="checks">
+<li><strong>vz instead of qemu</strong> on Apple silicon: faster start, less energy, and it unlocks virtiofs and Rosetta.</li>
+<li><strong>virtiofs mounts</strong> instead of sshfs or 9p: the biggest speedup for <code>npm install</code> and builds.</li>
+<li><strong>Right-sized VM</strong>: about half your CPU cores and 50% of your RAM, detected from your Mac.</li>
+<li><strong>Fixed DNS</strong> (1.1.1.1 and 8.8.8.8) so Wi-Fi switches and VPNs do not break the VM.</li>
+<li><strong>A lock badge</strong> on settings fixed at creation, and a safe &ldquo;Recreate VM&rdquo; flow with backups.</li>
+</ul>
+<p><a class="btn" href="optimization.html">See all 13 points</a></p></div></section><section class="section alt" id="gallery-sec"><div class="wrap"><h2>A look around</h2><div class="gallery"><figure class="shot "><img class="only-light" src="assets/screens/manager-overview.png" alt="The Manager overview with a diagram of Mac, socket, Colima VM and containers, usage charts and reclaimable space" width="1100" height="740" loading="lazy" decoding="async"><img class="only-dark" src="assets/screens/manager-overview-dark.png" alt="The Manager overview with a diagram of Mac, socket, Colima VM and containers, usage charts and reclaimable space" width="1100" height="740" loading="lazy" decoding="async"><figcaption>Overview: a diagram of how it all fits together, usage charts and reclaimable space.</figcaption></figure><figure class="shot "><img class="only-light" src="assets/screens/manager-profiles.png" alt="Profile settings showing locked and changeable options, a recommendation banner and the equivalent colima command" width="1100" height="740" loading="lazy" decoding="async"><img class="only-dark" src="assets/screens/manager-profiles-dark.png" alt="Profile settings showing locked and changeable options, a recommendation banner and the equivalent colima command" width="1100" height="740" loading="lazy" decoding="async"><figcaption>Profiles: locked versus changeable options, a recommendation for your Mac, and the equivalent command.</figcaption></figure><figure class="shot "><img src="assets/screens/manager-profiles-sheet.png" alt="The Recreate VM side sheet listing what is kept and what is deleted, with a field to type the profile name" width="1100" height="740" loading="lazy" decoding="async"><figcaption>Recreate VM: see what is kept and deleted, back up first, then type the profile name.</figcaption></figure><figure class="shot "><img src="assets/screens/manager-containers.png" alt="The containers table with search, bulk actions, pagination and a per-row context menu" width="1100" height="740" loading="lazy" decoding="async"><figcaption>Containers: search, bulk actions, pagination and a shell button on every row.</figcaption></figure><figure class="shot "><img src="assets/screens/manager-containers-stacks.png" alt="Docker Compose stacks grouped together with start, stop and restart for the whole stack" width="1100" height="740" loading="lazy" decoding="async"><figcaption>Compose stacks grouped together, with start, stop and restart for the whole stack.</figcaption></figure><figure class="shot "><img src="assets/screens/manager-images.png" alt="Images list with In use, Unused and Dangling badges and a Pull image button" width="1100" height="740" loading="lazy" decoding="async"><figcaption>Images and volumes, with In use, Unused and Dangling badges.</figcaption></figure><figure class="shot "><img src="assets/screens/manager-cleanup.png" alt="Cleanup page showing reclaimable space by type with prune buttons" width="1100" height="740" loading="lazy" decoding="async"><figcaption>Cleanup: reclaimable space per type, one prune button each.</figcaption></figure><figure class="shot narrow"><img src="assets/screens/popover-stacks.jpg" alt="The menu bar popover showing Compose stacks" width="500" height="520" loading="lazy" decoding="async"><figcaption>Stacks right from the menu bar popover.</figcaption></figure></div></div></section><section class="section "><div class="wrap"><h2>Built for agents too</h2><p>The app bundle includes <code>cdesk-mcp</code>, a stdio Model Context Protocol server. It works even when the app is not open. Agents such as Claude Code can list profiles, ask for a recommended size, start Colima, manage containers and read logs. Destructive tools require an explicit confirmation.</p>
+<p><a class="btn" href="agents.html">Set up agents</a></p></div></section><section class="section alt"><div class="wrap"><h2>Install in one minute</h2><p>You need macOS 14 or later and Homebrew. Then:</p><div class="code"><span class="code-label">Terminal</span><pre><code>brew install colima docker
+curl -fsSL https://raw.githubusercontent.com/kalahroudi/cdesk/main/scripts/install.sh | bash</code></pre><button type="button" class="copy" aria-label="Copy to clipboard">Copy</button></div><p>The installer downloads the latest release, verifies its SHA-256, installs CDesk to /Applications and opens it. A cube icon appears in the menu bar and the Dock. <a href="install.html">Full install guide</a></p></div></section><section class="section "><div class="wrap"><h2>FAQ</h2><div class="faq"><details><summary>Is CDesk affiliated with Colima?</summary><div class="ans"><p>No. Colima is made by <a href="https://github.com/abiosoft/colima">Abiosoft</a>. CDesk is an independent app that drives the <code>colima</code> and <code>docker</code> command line tools.</p></div></details><details><summary>Does it replace the CLI?</summary><div class="ans"><p>No. It sits on top of it. The &ldquo;Equivalent command&rdquo; box shows the exact <code>colima start ...</code> flags for the current form, and your <code>~/.colima/&lt;profile&gt;/colima.yaml</code> stays a normal file you can edit and keep in your dotfiles.</p></div></details><details><summary>Does it work with Docker Desktop installed?</summary><div class="ans"><p>CDesk talks to Colima and to the Docker context named <code>colima</code> (or <code>colima-&lt;profile&gt;</code>). Switching contexts is one click in Settings, and the Repair menu can re-register the Colima context if something else took over.</p></div></details><details><summary>Does it work on Intel Macs?</summary><div class="ans"><p>CDesk requires macOS 14 or later. Apple silicon is recommended, because the vz virtual machine type, virtiofs and Rosetta suggestions are aimed at it.</p></div></details><details><summary>Where is my data?</summary><div class="ans"><p>Your containers, images and volumes live inside the Colima VM, as they would without CDesk. CDesk keeps its own preferences under <code>defaults</code> (<code>com.kalahroudi.cdesk</code>) and in <code>~/Library/Application Support/CDesk</code>. Backups made before a recreate go to <code>~/Colima Backups/&lt;profile&gt;/</code>.</p></div></details><details><summary>What does Recreate delete?</summary><div class="ans"><p>Recreating deletes the VM and builds a new one, which removes the containers, images and volumes inside it. The Recreate VM sheet shows exactly what is kept and what is deleted, offers to export your volumes, saves <code>colima.yaml</code> and your image list to <code>~/Colima Backups/&lt;profile&gt;/</code>, and requires you to type the profile name.</p></div></details></div></div></section>
+</main>
+<footer class="site-footer">
+<div class="wrap foot">
+<div><strong>CDesk</strong> is open source under the <a href="https://github.com/kalahroudi/cdesk/blob/main/LICENSE">Apache-2.0</a> license.<br>
+By <a href="https://github.com/kalahroudi">kalahroudi</a>. Source on <a href="https://github.com/kalahroudi/cdesk">GitHub</a> &middot; <a href="https://github.com/kalahroudi/cdesk/releases">Releases</a>.</div>
+<div>Credits: <a href="https://github.com/abiosoft/colima">Colima</a> by Abiosoft; optimisation guidance from <a href="https://iniakunhuda.medium.com/2-years-with-colima-the-optimization-guide-i-wish-i-had-from-day-one-8b89b8155285">Miftahul Huda&rsquo;s guide</a>. CDesk is not affiliated with either.</div>
+</div>
+</footer>
+</body>
+</html>
