@@ -43,6 +43,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSPo
         Task { Updater.shared.autoCheckIfDue(enabled: Prefs.shared.autoCheckUpdates) }
     }
 
+    @objc func openSettings() { showManager(section: .settings) }
+
     @objc private func togglePopover() {
         if popover.isShown { popover.performClose(nil); return }
         guard let button = statusItem.button else { return }

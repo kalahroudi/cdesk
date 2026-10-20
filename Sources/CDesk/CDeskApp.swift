@@ -5,13 +5,15 @@ import SwiftUI
 import AppKit
 import ColimaKit
 
+/// Plain AppKit startup. There is deliberately no SwiftUI `App`/`Settings` scene: that adds an empty
+/// "Settings" window behind Cmd-, and the real settings live in the Manager window.
 @main
-struct CDeskApp: App {
-    @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
+enum CDeskMain {
+    static let delegate = MainActor.assumeIsolated { AppDelegate() }
 
-    init() {
-        // Command line helpers used by the build scripts and the updater.
+    static func main() {
         let args = CommandLine.arguments
+        // Command line helpers used by the build scripts and the updater.
         if args.contains("--self-test") { print("ok \(BuildInfo.current.commit ?? "dev")"); exit(0) }
         if let i = args.firstIndex(of: "--write-iconset"), i + 1 < args.count {
             do { try AppIcon.writeIconset(to: args[i + 1]); exit(0) } catch { FileHandle.standardError.write(Data("\(error)\n".utf8)); exit(1) }
@@ -25,6 +27,50 @@ struct CDeskApp: App {
             Thread.sleep(forTimeInterval: 0.3)
             exit(0)
         }
+
+        MainActor.assumeIsolated {
+            let app = NSApplication.shared
+            app.delegate = delegate
+            app.mainMenu = makeMainMenu()
+            app.run()
+        }
+    }
+
+    /// App, Edit and Window menus, so Cmd-, opens the real Settings pane and copy/paste/Cmd-W work in text fields and the Manager.
+    @MainActor private static func makeMainMenu() -> NSMenu {
+        let main = NSMenu()
+        func add(_ title: String, _ items: [NSMenuItem]) {
+            let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
+            let menu = NSMenu(title: title)
+            items.forEach(menu.addItem)
+            item.submenu = menu
+            main.addItem(item)
+        }
+        func item(_ title: String, _ action: Selector?, _ key: String = "", _ mods: NSEvent.ModifierFlags = .command, target: AnyObject? = nil) -> NSMenuItem {
+            let i = NSMenuItem(title: title, action: action, keyEquivalent: key)
+            i.keyEquivalentModifierMask = mods; i.target = target
+            return i
+        }
+        add("CDesk", [
+            item("About CDesk", #selector(NSApplication.orderFrontStandardAboutPanel(_:))),
+            .separator(),
+            item("Settings…", #selector(AppDelegate.openSettings), ",", target: delegate),
+            .separator(),
+            item("Hide CDesk", #selector(NSApplication.hide(_:)), "h"),
+            item("Hide Others", #selector(NSApplication.hideOtherApplications(_:)), "h", [.command, .option]),
+            .separator(),
+            item("Quit CDesk", #selector(NSApplication.terminate(_:)), "q"),
+        ])
+        add("Edit", [
+            item("Undo", Selector(("undo:")), "z"), item("Redo", Selector(("redo:")), "z", [.command, .shift]), .separator(),
+            item("Cut", #selector(NSText.cut(_:)), "x"), item("Copy", #selector(NSText.copy(_:)), "c"),
+            item("Paste", #selector(NSText.paste(_:)), "v"), item("Select All", #selector(NSText.selectAll(_:)), "a"),
+        ])
+        add("Window", [
+            item("Minimize", #selector(NSWindow.performMiniaturize(_:)), "m"),
+            item("Close", #selector(NSWindow.performClose(_:)), "w"),
+        ])
+        return main
     }
 
     /// Another live copy of this app. Waits a moment, since an update relaunch starts the new copy as the old one exits.
@@ -38,10 +84,4 @@ struct CDeskApp: App {
             Thread.sleep(forTimeInterval: 0.3)
         }
         return nil
-    }
-
-    var body: some Scene {
-        // The real windows are AppKit-managed (see AppDelegate) so they can be freed when closed.
-        Settings { EmptyView() }
-    }
-}
+    }}

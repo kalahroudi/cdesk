@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="512" height="512" role="img" aria-label="cdesk logo: an isometric teal container cube on a deep teal tile">
+  <defs>
+    <linearGradient id="bg" x1="0.1" y1="0" x2="0.9" y2="1"><stop offset="0" stop-color="#14707c"/><stop offset="1" stop-color="#072a37"/></linearGradient>
+    <radialGradient id="gl" cx="0.5" cy="0.05" r="0.7"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+  </defs>
+  <rect width="1024" height="1024" rx="230" fill="url(#bg)"/>
+  <rect width="1024" height="1024" rx="230" fill="url(#gl)"/>
+  <g stroke="#0a3340" stroke-width="18" stroke-linejoin="round">
+    <path d="M512 242 746 377 512 512 278 377Z" fill="#ffffff"/>
+    <path d="M278 377 512 512V782L278 647Z" fill="#a7f3e4"/>
+    <path d="M746 377 512 512V782L746 647Z" fill="#2dd4bf"/>
+  </g>
+</svg>
